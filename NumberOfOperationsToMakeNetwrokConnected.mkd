@@ -1,0 +1,118 @@
+### NUMBER OF OPERATIONS TO MAKE NETWORK CONNECTED
+
+
+**1. Initialization:**
+
+* Create a `UnionFind` data structure with `n` nodes (representing the computers).
+* Initialize a counter `extraCables` to 0.
+
+**2. Build Initial Network:**
+
+* Iterate through the `connections` list.
+* For each connection `[a, b]`:
+    * If `a` and `b` belong to different components (using `find(a)` and `find(b)`):
+        * Perform `union(a, b)` to merge the components.
+    * Otherwise, increment `extraCables` (as this connection is redundant).
+
+**3. Determine Required Extra Cables:**
+
+* After processing all initial connections:
+    * The number of connected components in the network is determined by the number of distinct roots in the `UnionFind` data structure.
+    * If there is only one connected component, no extra cables are needed, so return 0.
+    * Otherwise, return `extraCables - (numberOfComponents - 1)`.
+
+**Explanation:**
+
+* **Union-Find:** The `Union-Find` data structure efficiently tracks the connectivity between computers.
+* **Counting Redundant Cables:** By initially checking if `a` and `b` belong to the same component before performing the `union`, we identify and count redundant connections.
+* **Calculating Extra Cables:** 
+    * The number of extra cables needed is equal to the number of redundant connections 
+      minus the number of additional connections required to connect all components.
+    * If there is only one connected component, no extra cables are needed.
+    * Otherwise, we need to add `numberOfComponents - 1` new connections to connect all components.
+    * Therefore, the number of extra cables needed is `extraCables - (numberOfComponents - 1)`.
+
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class UnionFind {
+public:
+    vector<int> parent;
+    vector<int> rank;
+
+    UnionFind(int n) {
+        parent.resize(n);
+        rank.resize(n, 0);
+        for (int i = 0; i < n; ++i) {
+            parent[i] = i;
+        }
+    }
+
+    int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]); 
+        }
+        return parent[x];
+    }
+
+    void union_set(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+
+        if (rootX != rootY) {
+            if (rank[rootX] < rank[rootY]) {
+                parent[rootX] = rootY;
+            } else if (rank[rootX] > rank[rootY]) {
+                parent[rootY] = rootX;
+            } else {
+                parent[rootY] = rootX;
+                rank[rootX]++;
+            }
+        }
+    }
+};
+
+class Solution {
+public:
+    int makeConnected(vector<vector<int>>& connections) {
+        int n = connections.size();
+        UnionFind uf(n);
+        int extraCables = 0; 
+
+        for (const auto& connection : connections) {
+            int u = connection[0];
+            int v = connection[1];
+            if (uf.find(u) == uf.find(v)) {
+                extraCables++; 
+            } else {
+                uf.union_set(u, v);
+            }
+        }
+
+        int numComponents = 0;
+        for (int i = 0; i < n; ++i) {
+            if (uf.parent[i] == i) {
+                numComponents++;
+            }
+        }
+
+        return (numComponents - 1) > extraCables ? -1 : extraCables; 
+    }
+};
+
+int main() {
+    vector<vector<int>> connections1 = {{0, 1}, {1, 2}, {2, 0}, {1, 3}};
+    vector<vector<int>> connections2 = {{0, 1}, {1, 2}, {3, 4}};
+
+    Solution solution;
+    cout << "Minimum number of extra cables needed: " << solution.makeConnected(connections1) << endl;
+    cout << "Minimum number of extra cables needed: " << solution.makeConnected(connections2) << endl;
+
+    return 0;
+}
+```
+
